@@ -15,9 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
         INITIAL_SPEED: 5,
         MAX_SPEED: 20,
         SPEED_INCREMENT: 0.005,
-        JUMP_HEIGHT: 150,
-        JUMP_DURATION: 500,
-        DUCK_HEIGHT: 30,
+        FLY_SPEED: 4,
+        MAX_ALTITUDE: 180,
+        MIN_ALTITUDE: 20,
         OBSTACLE_INTERVAL: 1500,
         CLOUD_INTERVAL: 3000,
         BIRD_SPAWN_INTERVAL: 10000,
@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
         score: 0,
         highScore: parseInt(localStorage.getItem('dinoHighScore')) || 0,
         speed: CONFIG.INITIAL_SPEED,
-        isJumping: false,
+        dinoAltitude: 100,
+        altitudeChange: 0,
         isDucking: false,
         isInvincible: false,
         obstacles: [],
@@ -152,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (state.current === GAME_STATES.MENU) {
                     startGame();
                 } else if (state.current === GAME_STATES.PLAYING) {
-                    handleJump();
+                    changeAltitude(1);
                 } else if (state.current === GAME_STATES.GAME_OVER) {
                     handleRestart();
                 }
@@ -162,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'KeyS':
                 e.preventDefault();
                 if (state.current === GAME_STATES.PLAYING) {
-                    handleDuck(true);
+                    changeAltitude(-1);
                 }
                 break;
                 
@@ -189,53 +190,44 @@ document.addEventListener('DOMContentLoaded', function() {
         if ((e.code === 'ArrowDown' || e.code === 'KeyS') && state.current === GAME_STATES.PLAYING) {
             handleDuck(false);
         }
-    }
-
-    function handleJump() {
-        if (!state.isJumping && state.current === GAME_STATES.PLAYING) {
-            const now = Date.now();
-            if (now - state.lastJumpTime < 100) return; // Prevent rapid jumping
-            
-            state.isJumping = true;
-            state.lastJumpTime = now;
-            
-            // Add combo for consecutive jumps
-            if (now - state.lastJumpTime < 1000) {
-                state.combo++;
-                updateCombo();
-            } else {
-                state.combo = 1;
-            }
-            
-            // Jump animation
-            elements.dino.classList.add('jumping');
-            elements.dino.style.bottom = `${CONFIG.GROUND_HEIGHT + CONFIG.JUMP_HEIGHT}px`;
-            
-            // Jump sound effect
-            playJumpSound();
-            
-            // Reset jump after duration
-            setTimeout(() => {
-                if (state.current === GAME_STATES.PLAYING) {
-                    elements.dino.classList.remove('jumping');
-                    elements.dino.style.bottom = `${CONFIG.GROUND_HEIGHT}px`;
-                    state.isJumping = false;
-                }
-            }, CONFIG.JUMP_DURATION);
+        
+        if ((e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'ArrowDown' || e.code === 'KeyS') && 
+            state.current === GAME_STATES.PLAYING) {
+            e.preventDefault();
+            stopAltitudeChange();
         }
     }
 
-    function handleDuck(isDucking) {
-        if (state.current === GAME_STATES.PLAYING && !state.isJumping) {
-            state.isDucking = isDucking;
-            if (isDucking) {
-                elements.dino.classList.add('ducking');
-                elements.dino.style.height = '40px';
-            } else {
-                elements.dino.classList.remove('ducking');
-                elements.dino.style.height = '70px';
+    function updateDinoAltitude() {
+        if (state.current !== GAME_STATES.PLAYING) return;
+        
+        if (state.altitudeChange === 1 && state.dinoAltitude < CONFIG.MAX_ALTITUDE) {
+            state.dinoAltitude += CONFIG.FLY_SPEED;
+            elements.dino.classList.add('tilt-up');
+            elements.dino.classList.remove('tilt-down');
+        } else if (state.altitudeChange === -1 && state.dinoAltitude > CONFIG.MIN_ALTITUDE) {
+            state.dinoAltitude -= CONFIG.FLY_SPEED;
+            elements.dino.classList.add('tilt-down');
+            elements.dino.classList.remove('tilt-up');
+        } else {
+            elements.dino.classList.remove('tilt-up', 'tilt-down');
+            if (state.dinoAltitude > CONFIG.MIN_ALTITUDE + 20) {
+                state.dinoAltitude -= 0.8;
             }
         }
+        
+        elements.dino.style.bottom = `${state.dinoAltitude}px`;
+                updateAltitudeIndicator();
+    }
+
+    function changeAltitude(direction) {
+        if (state.current === GAME_STATES.PLAYING) {
+            state.altitudeChange = direction;
+        }
+    }
+
+    function stopAltitudeChange() {
+        state.altitudeChange = 0;
     }
 
     // ============================================
@@ -275,6 +267,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function gameOver() {
         state.current = GAME_STATES.GAME_OVER;
         
+        // Remove flying animation
+        elements.dino.classList.remove('flying', 'tilt-up', 'tilt-down');
+        
         // Cancel animation frame
         if (state.gameLoopId) {
             cancelAnimationFrame(state.gameLoopId);
@@ -312,9 +307,12 @@ document.addEventListener('DOMContentLoaded', function() {
         state.combo = 0;
         
         // Reset dino position
-        elements.dino.classList.remove('jumping', 'ducking');
-        elements.dino.style.bottom = `${CONFIG.GROUND_HEIGHT}px`;
+        state.dinoAltitude = 100;
+        state.altitudeChange = 0;
+        elements.dino.classList.remove('tilt-up', 'tilt-down', 'ducking');
+        elements.dino.style.bottom = '100px';
         elements.dino.style.height = '70px';
+        elements.dino.classList.add('flying');
         
         // Reset UI
         updateUI();
@@ -348,6 +346,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateGame(timestamp) {
+        // Update dino altitude
+        updateDinoAltitude();
+        
         // Update score
         state.score += CONFIG.SCORE_INCREMENT;
         if (state.score % 100 === 0) {
@@ -422,32 +423,53 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     // GAME OBJECT MANAGEMENT
     // ============================================
-    function spawnObstacle() {
-        const obstacleTypes = ['cactus-small', 'cactus-small', 'cactus-small', 'cactus-large'];
+function spawnObstacle() {
+        const obstacleTypes = ['ground', 'low', 'mid', 'high', 'double'];
         const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
         
         const obstacle = document.createElement('div');
-        obstacle.className = `obstacle ${type}`;
+        obstacle.className = 'obstacle';
         
-        // Randomize properties based on type
-        let width, height;
-        if (type === 'cactus-small') {
+        let width, height, bottomPosition;
+        
+        if (type === 'ground') {
             width = 25;
             height = 40 + Math.random() * 20;
-        } else {
-            width = 40;
-            height = 60 + Math.random() * 20;
+            bottomPosition = CONFIG.GROUND_HEIGHT;
+        } else if (type === 'low') {
+            width = 25;
+            height = 40;
+            bottomPosition = 60;
+        } else if (type === 'mid') {
+            width = 30;
+            height = 50;
+            bottomPosition = 100;
+        } else if (type === 'high') {
+            width = 30;
+            height = 60;
+            bottomPosition = 140;
+        } else { // double
+            width = 50;
+            height = 40;
+            bottomPosition = CONFIG.GROUND_HEIGHT;
+            obstacle.innerHTML = `
+                <div style="position:absolute;width:20px;height:100%;background-color:#5f6368;border-radius:5px;"></div>
+                <div style="position:absolute;left:25px;width:20px;height:100%;background-color:#5f6368;border-radius:5px;bottom:100px;"></div>
+            `;
         }
         
-        obstacle.style.width = `${width}px`;
-        obstacle.style.height = `${height}px`;
+        if (type !== 'double') {
+            obstacle.style.width = `${width}px`;
+            obstacle.style.height = `${height}px`;
+        }
+        obstacle.style.bottom = `${bottomPosition}px`;
         
         elements.gameArea.appendChild(obstacle);
         
         state.obstacles.push({
             element: obstacle,
             x: elements.gameArea.offsetWidth,
-            y: CONFIG.GROUND_HEIGHT,
+            y: bottomPosition,
             width: width,
             height: height,
             type: type
@@ -634,9 +656,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function checkCollisions() {
         if (state.isInvincible) return;
         
-        const dinoRect = {
+    const dinoRect = {
             x: 60,
-            y: state.isJumping ? CONFIG.GROUND_HEIGHT + CONFIG.JUMP_HEIGHT : CONFIG.GROUND_HEIGHT,
+            y: state.dinoAltitude,
             width: state.isDucking ? 60 : 60,
             height: state.isDucking ? 40 : 70
         };
@@ -699,6 +721,29 @@ document.addEventListener('DOMContentLoaded', function() {
         if (elements.speedIndicator) {
             elements.speedIndicator.textContent = `Speed: ${state.speed.toFixed(1)}x`;
             elements.speedIndicator.style.display = 'block';
+        }
+    }
+
+    function updateAltitudeIndicator() {
+        const altitudeBar = document.getElementById('altitude-bar');
+        const altitudeText = document.getElementById('altitude-text');
+        
+        if (altitudeBar && altitudeText) {
+            // Calculate percentage (0% at MIN_ALTITUDE, 100% at MAX_ALTITUDE)
+            const percent = ((state.dinoAltitude - CONFIG.MIN_ALTITUDE) / 
+                           (CONFIG.MAX_ALTITUDE - CONFIG.MIN_ALTITUDE)) * 100;
+            
+            altitudeBar.style.height = `${Math.max(0, Math.min(100, percent))}%`;
+            altitudeText.textContent = `Altitude: ${Math.round(state.dinoAltitude)}px`;
+            
+            // Change color based on altitude
+            if (percent > 80) {
+                altitudeBar.style.background = 'linear-gradient(to top, #ea4335, #fbbc04)';
+            } else if (percent > 50) {
+                altitudeBar.style.background = 'linear-gradient(to top, #fbbc04, #34a853)';
+            } else {
+                altitudeBar.style.background = 'linear-gradient(to top, #34a853, #1a73e8)';
+            }
         }
     }
 
@@ -931,6 +976,23 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             elements.gameArea.appendChild(difficultyIndicator);
             elements.difficultyDots = difficultyIndicator.querySelectorAll('.difficulty-dot');
+        }
+        
+        // Create altitude indicator if it doesn't exist
+        if (!document.getElementById('altitude-indicator')) {
+            const altitudeIndicator = document.createElement('div');
+            altitudeIndicator.className = 'altitude-indicator';
+            altitudeIndicator.id = 'altitude-indicator';
+            altitudeIndicator.innerHTML = '<div class="altitude-bar" id="altitude-bar"></div>';
+            elements.gameArea.appendChild(altitudeIndicator);
+        }
+        
+        if (!document.getElementById('altitude-text')) {
+            const altitudeText = document.createElement('div');
+            altitudeText.className = 'altitude-text';
+            altitudeText.id = 'altitude-text';
+            altitudeText.textContent = 'Altitude: 100px';
+            elements.gameArea.appendChild(altitudeText);
         }
     }
 
