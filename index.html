@@ -4,13 +4,252 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flying Dinosaur Game</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* TEMPORARY CSS - Will be replaced with external file */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f8ff 0%, #f5f5f5 100%);
+            color: #333;
+            line-height: 1.6;
+            font-size: 1rem;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            border-left: 4px solid #008080;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        h1 {
+            color: #008080;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .score-container {
+            display: flex;
+            gap: 1rem;
+            background: #f0f8ff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .score-box, .high-score-box {
+            text-align: center;
+        }
+
+        .score-box span, .high-score-box span {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #008080;
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(to bottom, #e8f4f8 0%, #f0f8ff 100%);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 1.5rem;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 25px;
+            background: repeating-linear-gradient(
+                90deg,
+                #008080,
+                #008080 20px,
+                #006400 20px,
+                #006400 40px
+            );
+            animation: groundMove linear infinite 2s;
+        }
+
+        @keyframes groundMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-20px); }
+        }
+
+        .dino {
+            position: absolute;
+            bottom: 100px;
+            left: 50px;
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(135deg, #008080 0%, #00CED1 100%);
+            border-radius: 8px 5px 5px 8px;
+            transition: bottom 0.1s;
+            z-index: 2;
+        }
+
+        .dino-wing {
+            position: absolute;
+            background: linear-gradient(135deg, #008080 0%, #00CED1 100%);
+            border-radius: 5px;
+            animation: flap 0.4s infinite alternate ease-in-out;
+        }
+
+        .dino-wing.left {
+            width: 30px;
+            height: 8px;
+            top: 15px;
+            left: -25px;
+        }
+
+        .dino-wing.right {
+            width: 30px;
+            height: 8px;
+            top: 15px;
+            right: -25px;
+        }
+
+        @keyframes flap {
+            0% { transform: scaleY(0.8) rotate(-5deg); }
+            100% { transform: scaleY(1.2) rotate(5deg); }
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 20px;
+            height: 50px;
+            background: #008080;
+            border-radius: 4px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            display: none; /* CHANGED: Initially hidden */
+            z-index: 20;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .restart-btn {
+            background: #32CD32;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+
+        .paused {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            z-index: 10;
+        }
+
+        .collision-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 107, 107, 0.3);
+            z-index: 5;
+            pointer-events: none;
+            display: none;
+        }
+
+        .mobile-controls {
+            display: none;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .mobile-btn {
+            background: #1E90FF;
+            color: white;
+            border: none;
+            width: 100px;
+            height: 70px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .instructions {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #f0f8ff;
+            border-radius: 8px;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            background: #f0f8ff;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="game-container">
         <div class="game-header">
             <h1>
-                <svg class="dino-icon" viewBox="0 0 24 24" fill="#008080">
+                <svg class="dino-icon" viewBox="0 0 24 24" fill="#008080" style="width: 42px; height: 42px;">
                     <path d="M6,18c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2v-1h-12v1zM15,10h-2v-2h2v2zM11,10h-2v-2h2v2zM18,13c0,-2.8 -2.2,-5 -5,-5h-2c-2.8,0 -5,2.2 -5,5v3h12v-3z"/>
                 </svg>
                 Flying Dinosaur Game
@@ -85,6 +324,807 @@
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <script>
+        // FLYING DINOSAUR GAME - Complete JavaScript
+        // IMPORTANT: Obstacles on the bottom must touch the floor
+
+        // ============================================
+        // GAME VARIABLES AND CONSTANTS
+        // ============================================
+        const GAME_STATES = {
+            MENU: 'menu',
+            PLAYING: 'playing',
+            PAUSED: 'paused',
+            GAME_OVER: 'game_over'
+        };
+
+        // Game configuration
+        const CONFIG = {
+            INITIAL_SPEED: 5,
+            MAX_SPEED: 20,
+            SPEED_INCREMENT: 0.005,
+            FLY_SPEED: 4,
+            MAX_ALTITUDE: 180,
+            MIN_ALTITUDE: 20,
+            OBSTACLE_INTERVAL: 1500,
+            CLOUD_INTERVAL: 3000,
+            SCORE_INCREMENT: 1,
+            GROUND_HEIGHT: 25,
+            DINOSAUR_WIDTH: 60,
+            DINOSAUR_HEIGHT: 40
+        };
+
+        // Game state
+        let state = {
+            current: GAME_STATES.MENU,
+            score: 0,
+            highScore: parseInt(localStorage.getItem('dinoHighScore')) || 0,
+            speed: CONFIG.INITIAL_SPEED,
+            dinoAltitude: 100,
+            altitudeChange: 0,
+            obstacles: [],
+            clouds: [],
+            groundPositions: [0, 800],
+            lastObstacleTime: 0,
+            lastCloudTime: 0,
+            gameLoopId: null,
+            level: 1
+        };
+
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
+        const elements = {
+            gameArea: document.getElementById('game-area'),
+            dino: document.getElementById('dino'),
+            ground: document.querySelector('.ground'),
+            scoreElement: document.getElementById('score'),
+            highScoreElement: document.getElementById('high-score'),
+            finalScoreElement: document.getElementById('final-score'),
+            finalHighScoreElement: document.getElementById('final-high-score'),
+            gameOverScreen: document.getElementById('game-over'),
+            restartBtn: document.getElementById('restart-btn'),
+            speedElement: document.getElementById('speed'),
+            obstaclesCountElement: document.getElementById('obstacles-count'),
+            pausedText: document.getElementById('paused-text'),
+            jumpBtn: document.getElementById('jump-btn'),
+            duckBtn: document.getElementById('duck-btn'),
+            altitudeDisplay: document.getElementById('altitude-display')
+        };
+
+        // ============================================
+        // GAME INITIALIZATION
+        // ============================================
+        function initGame() {
+            console.log("Game initializing...");
+            
+            // Set initial UI state
+            updateUI();
+            updateAltitudeDisplay();
+            createInitialClouds();
+            createGroundPattern();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Show start screen
+            showStartScreen();
+            
+            // Start animation loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ============================================
+        // EVENT LISTENERS SETUP
+        // ============================================
+        function setupEventListeners() {
+            // Keyboard controls
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            
+            // Button controls
+            elements.restartBtn.addEventListener('click', handleRestart);
+            
+            // Mobile controls
+            elements.jumpBtn.addEventListener('touchstart', () => changeAltitude(1));
+            elements.jumpBtn.addEventListener('touchend', () => stopAltitudeChange());
+            elements.jumpBtn.addEventListener('mousedown', () => changeAltitude(1));
+            elements.jumpBtn.addEventListener('mouseup', () => stopAltitudeChange());
+            elements.jumpBtn.addEventListener('mouseleave', () => stopAltitudeChange());
+            
+            elements.duckBtn.addEventListener('touchstart', () => changeAltitude(-1));
+            elements.duckBtn.addEventListener('touchend', () => stopAltitudeChange());
+            elements.duckBtn.addEventListener('mousedown', () => changeAltitude(-1));
+            elements.duckBtn.addEventListener('mouseup', () => stopAltitudeChange());
+            elements.duckBtn.addEventListener('mouseleave', () => stopAltitudeChange());
+            
+            // Touch controls for mobile
+            elements.gameArea.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (state.current === GAME_STATES.MENU) {
+                    startGame();
+                }
+            });
+        }
+
+        // ============================================
+        // INPUT HANDLING
+        // ============================================
+        function handleKeyDown(e) {
+            switch(e.code) {
+                case 'Space':
+                case 'ArrowUp':
+                case 'KeyW':
+                    e.preventDefault();
+                    if (state.current === GAME_STATES.MENU) {
+                        startGame();
+                    } else if (state.current === GAME_STATES.PLAYING) {
+                        changeAltitude(1);
+                    } else if (state.current === GAME_STATES.GAME_OVER) {
+                        handleRestart();
+                    }
+                    break;
+                    
+                case 'ArrowDown':
+                case 'KeyS':
+                    e.preventDefault();
+                    if (state.current === GAME_STATES.PLAYING) {
+                        changeAltitude(-1);
+                    }
+                    break;
+                    
+                case 'KeyP':
+                    e.preventDefault();
+                    togglePause();
+                    break;
+                    
+                case 'KeyR':
+                    if (state.current === GAME_STATES.GAME_OVER) {
+                        handleRestart();
+                    }
+                    break;
+                    
+                case 'Escape':
+                    if (state.current === GAME_STATES.PLAYING) {
+                        togglePause();
+                    }
+                    break;
+            }
+            
+            // Start game on any key if not running
+            if (state.current === GAME_STATES.MENU) {
+                if (e.code !== 'Tab' && e.code !== 'ShiftLeft' && e.code !== 'ShiftRight') {
+                    startGame();
+                }
+            }
+        }
+
+        function handleKeyUp(e) {
+            if ((e.code === 'ArrowUp' || e.key === ' ' || e.key === 'ArrowDown' || 
+                e.key === 's' || e.key === 'S' || e.key === 'w' || e.key === 'W') && 
+                state.current === GAME_STATES.PLAYING) {
+                e.preventDefault();
+                stopAltitudeChange();
+            }
+        }
+
+        // ============================================
+        // FLYING MECHANICS
+        // ============================================
+        function updateDinoAltitude() {
+            if (state.current !== GAME_STATES.PLAYING) return;
+            
+            if (state.altitudeChange === 1 && state.dinoAltitude < CONFIG.MAX_ALTITUDE) {
+                state.dinoAltitude += CONFIG.FLY_SPEED;
+                elements.dino.classList.add('tilt-up');
+                elements.dino.classList.remove('tilt-down');
+            } else if (state.altitudeChange === -1 && state.dinoAltitude > CONFIG.MIN_ALTITUDE) {
+                state.dinoAltitude -= CONFIG.FLY_SPEED;
+                elements.dino.classList.add('tilt-down');
+                elements.dino.classList.remove('tilt-up');
+            } else {
+                elements.dino.classList.remove('tilt-up', 'tilt-down');
+                // Gentle downward drift
+                if (state.dinoAltitude > CONFIG.MIN_ALTITUDE + 20) {
+                    state.dinoAltitude -= 0.8;
+                }
+            }
+            
+            // Apply altitude to dino
+            elements.dino.style.bottom = `${state.dinoAltitude}px`;
+            
+            // Update altitude display
+            updateAltitudeDisplay();
+        }
+
+        function changeAltitude(direction) {
+            if (state.current === GAME_STATES.PLAYING) {
+                state.altitudeChange = direction;
+            }
+        }
+
+        function stopAltitudeChange() {
+            state.altitudeChange = 0;
+        }
+
+        function updateAltitudeDisplay() {
+            if (elements.altitudeDisplay) {
+                elements.altitudeDisplay.textContent = Math.round(state.dinoAltitude) + 'px';
+            }
+            
+            // Update altitude bar
+            const altitudeBar = document.getElementById('altitude-bar');
+            const altitudeText = document.getElementById('altitude-text');
+            
+            if (altitudeBar && altitudeText) {
+                const percent = ((state.dinoAltitude - CONFIG.MIN_ALTITUDE) / 
+                               (CONFIG.MAX_ALTITUDE - CONFIG.MIN_ALTITUDE)) * 100;
+                
+                altitudeBar.style.height = `${Math.max(0, Math.min(100, percent))}%`;
+                altitudeText.textContent = `Altitude: ${Math.round(state.dinoAltitude)}px`;
+                
+                // Change color based on altitude
+                if (percent > 80) {
+                    altitudeBar.style.background = 'linear-gradient(to top, #ea4335, #fbbc04)';
+                } else if (percent > 50) {
+                    altitudeBar.style.background = 'linear-gradient(to top, #fbbc04, #34a853)';
+                } else {
+                    altitudeBar.style.background = 'linear-gradient(to top, #34a853, #1a73e8)';
+                }
+            }
+        }
+
+        // ============================================
+        // GAME STATE MANAGEMENT
+        // ============================================
+        function startGame() {
+            if (state.current !== GAME_STATES.MENU) return;
+            
+            console.log("Starting game...");
+            resetGame();
+            state.current = GAME_STATES.PLAYING;
+            
+            // Update UI
+            elements.gameOverScreen.style.display = 'none';
+            
+            // Add flying animation
+            elements.dino.classList.add('flying');
+            
+            // Start game loop
+            if (!state.gameLoopId) {
+                state.gameLoopId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function togglePause() {
+            if (state.current === GAME_STATES.PLAYING) {
+                state.current = GAME_STATES.PAUSED;
+                elements.pausedText.style.display = 'block';
+            } else if (state.current === GAME_STATES.PAUSED) {
+                state.current = GAME_STATES.PLAYING;
+                elements.pausedText.style.display = 'none';
+                
+                // Resume game loop
+                if (!state.gameLoopId) {
+                    state.gameLoopId = requestAnimationFrame(gameLoop);
+                }
+            }
+        }
+
+        function gameOver() {
+            console.log("Game Over!");
+            state.current = GAME_STATES.GAME_OVER;
+            
+            // Remove flying animation
+            elements.dino.classList.remove('flying', 'tilt-up', 'tilt-down');
+            
+            // Cancel animation frame
+            if (state.gameLoopId) {
+                cancelAnimationFrame(state.gameLoopId);
+                state.gameLoopId = null;
+            }
+            
+            // Update high score
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('dinoHighScore', state.highScore);
+            }
+            
+            // Show game over screen
+            showGameOver();
+        }
+
+        function resetGame() {
+            // Clear all obstacles and clouds
+            state.obstacles.forEach(obstacle => {
+                if (obstacle.element && obstacle.element.parentNode) {
+                    obstacle.element.remove();
+                }
+            });
+            
+            state.clouds.forEach(cloud => {
+                if (cloud.element && cloud.element.parentNode) {
+                    cloud.element.remove();
+                }
+            });
+            
+            // Reset state
+            state.obstacles = [];
+            state.clouds = [];
+            state.score = 0;
+            state.speed = CONFIG.INITIAL_SPEED;
+            state.dinoAltitude = 100;
+            state.altitudeChange = 0;
+            state.level = 1;
+            state.lastObstacleTime = 0;
+            state.lastCloudTime = 0;
+            
+            // Reset dino position
+            elements.dino.classList.remove('tilt-up', 'tilt-down');
+            elements.dino.style.bottom = '100px';
+            updateAltitudeDisplay();
+            
+            // Reset UI
+            updateUI();
+        }
+
+        function handleRestart() {
+            console.log("Restarting game...");
+            if (state.current === GAME_STATES.GAME_OVER || state.current === GAME_STATES.MENU) {
+                resetGame();
+                startGame();
+            }
+        }
+
+        // ============================================
+        // GAME LOGIC
+        // ============================================
+        function gameLoop(timestamp) {
+            if (state.current === GAME_STATES.PLAYING) {
+                // Update game state
+                updateGame(timestamp);
+                
+                // Check for collisions
+                checkCollisions();
+                
+                // Schedule next frame
+                state.gameLoopId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function updateGame(timestamp) {
+            // Update dino altitude
+            updateDinoAltitude();
+            
+            // Update score
+            state.score += CONFIG.SCORE_INCREMENT;
+            if (state.score % 100 === 0) {
+                // Flash score animation
+                elements.scoreElement.classList.add('score-increase');
+                setTimeout(() => {
+                    elements.scoreElement.classList.remove('score-increase');
+                }, 300);
+            }
+            
+            // Increase speed gradually
+            if (state.speed < CONFIG.MAX_SPEED) {
+                state.speed += CONFIG.SPEED_INCREMENT;
+            }
+            
+            // Update level based on score
+            const newLevel = Math.floor(state.score / 1000) + 1;
+            if (newLevel > state.level) {
+                state.level = newLevel;
+            }
+            
+            // Spawn obstacles
+            if (timestamp - state.lastObstacleTime > CONFIG.OBSTACLE_INTERVAL / (state.speed / CONFIG.INITIAL_SPEED)) {
+                spawnObstacle();
+                state.lastObstacleTime = timestamp;
+            }
+            
+            // Spawn clouds
+            if (timestamp - state.lastCloudTime > CONFIG.CLOUD_INTERVAL) {
+                spawnCloud();
+                state.lastCloudTime = timestamp;
+            }
+            
+            // Update ground movement
+            updateGround();
+            
+            // Update all moving objects
+            updateObstacles();
+            updateClouds();
+            
+            // Update UI
+            updateUI();
+        }
+
+        // ============================================
+        // GAME OBJECT MANAGEMENT
+        // ============================================
+        function spawnObstacle() {
+            const obstacleTypes = ['ground', 'low', 'mid', 'high'];
+            const type = obstacleTypes[Math.floor(Math.random() * 4)];
+            
+            const obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            
+            let width, height, bottomPos;
+            
+            if (type === 'ground') {
+                width = 20;
+                height = 50;
+                // GROUND OBSTACLES TOUCH THE FLOOR
+                bottomPos = 0; // This makes it touch the floor
+            } else if (type === 'low') {
+                width = 25;
+                height = 40;
+                bottomPos = 60; // Low flying
+            } else if (type === 'mid') {
+                width = 30;
+                height = 50;
+                bottomPos = 100; // Mid flying
+            } else { // 'high'
+                width = 25;
+                height = 60;
+                bottomPos = 140; // High flying
+            }
+            
+            obstacle.style.width = `${width}px`;
+            obstacle.style.height = `${height}px`;
+            obstacle.style.bottom = `${bottomPos}px`;
+            obstacle.style.left = `${elements.gameArea.offsetWidth}px`;
+            
+            // Different colors for different heights
+            if (type === 'ground') {
+                obstacle.style.background = 'linear-gradient(135deg, #008080 0%, #006400 100%)';
+            } else if (type === 'low') {
+                obstacle.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)';
+            } else if (type === 'mid') {
+                obstacle.style.background = 'linear-gradient(135deg, #FFD93D 0%, #FF9A3D 100%)';
+            } else { // 'high'
+                obstacle.style.background = 'linear-gradient(135deg, #6BCF7F 0%, #4CD97B 100%)';
+            }
+            
+            elements.gameArea.appendChild(obstacle);
+            
+            state.obstacles.push({
+                element: obstacle,
+                x: elements.gameArea.offsetWidth,
+                y: bottomPos,
+                width: width,
+                height: height,
+                type: type
+            });
+            
+            updateObstacleCount();
+        }
+
+        function spawnCloud() {
+            const cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            
+            const size = 40 + Math.random() * 40;
+            const y = 20 + Math.random() * 100;
+            
+            cloud.style.width = `${size}px`;
+            cloud.style.height = `${size/2}px`;
+            cloud.style.top = `${y}px`;
+            cloud.style.left = `${elements.gameArea.offsetWidth}px`;
+            cloud.style.background = 'linear-gradient(135deg, white 0%, #f8f9fa 100%)';
+            cloud.style.borderRadius = '50px';
+            cloud.style.position = 'absolute';
+            cloud.style.boxShadow = '0 4px 15px rgba(255, 255, 255, 0.5)';
+            cloud.style.opacity = '0.9';
+            
+            elements.gameArea.appendChild(cloud);
+            state.clouds.push({
+                element: cloud,
+                x: elements.gameArea.offsetWidth,
+                width: size,
+                speed: 0.5 + Math.random() * 1
+            });
+        }
+
+        function createInitialClouds() {
+            for (let i = 0; i < 3; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                
+                const size = 40 + Math.random() * 40;
+                const y = 20 + Math.random() * 100;
+                const x = Math.random() * elements.gameArea.offsetWidth;
+                
+                cloud.style.width = `${size}px`;
+                cloud.style.height = `${size/2}px`;
+                cloud.style.top = `${y}px`;
+                cloud.style.left = `${x}px`;
+                cloud.style.background = 'linear-gradient(135deg, white 0%, #f8f9fa 100%)';
+                cloud.style.borderRadius = '50px';
+                cloud.style.position = 'absolute';
+                cloud.style.boxShadow = '0 4px 15px rgba(255, 255, 255, 0.5)';
+                cloud.style.opacity = '0.9';
+                
+                elements.gameArea.appendChild(cloud);
+                
+                state.clouds.push({
+                    element: cloud,
+                    x: x,
+                    width: size,
+                    speed: 0.5 + Math.random() * 1
+                });
+            }
+        }
+
+        function createGroundPattern() {
+            elements.ground.style.background = `
+                repeating-linear-gradient(
+                    90deg,
+                    #008080,
+                    #008080 20px,
+                    #006400 20px,
+                    #006400 40px
+                )
+            `;
+        }
+
+        // ============================================
+        // UPDATE FUNCTIONS
+        // ============================================
+        function updateObstacles() {
+            for (let i = state.obstacles.length - 1; i >= 0; i--) {
+                const obstacle = state.obstacles[i];
+                obstacle.x -= state.speed;
+                obstacle.element.style.left = `${obstacle.x}px`;
+                
+                if (obstacle.x < -obstacle.width) {
+                    if (obstacle.element && obstacle.element.parentNode) {
+                        obstacle.element.remove();
+                    }
+                    state.obstacles.splice(i, 1);
+                    updateObstacleCount();
+                }
+            }
+        }
+
+        function updateClouds() {
+            for (let i = state.clouds.length - 1; i >= 0; i--) {
+                const cloud = state.clouds[i];
+                cloud.x -= cloud.speed;
+                cloud.element.style.left = `${cloud.x}px`;
+                
+                if (cloud.x < -cloud.width) {
+                    if (cloud.element && cloud.element.parentNode) {
+                        cloud.element.remove();
+                    }
+                    state.clouds.splice(i, 1);
+                }
+            }
+        }
+
+        function updateGround() {
+            state.groundPositions = state.groundPositions.map(pos => {
+                pos -= state.speed;
+                if (pos <= -800) pos = 800;
+                return pos;
+            });
+            
+            elements.ground.style.backgroundPositionX = `${state.groundPositions[0]}px`;
+        }
+
+        // ============================================
+        // COLLISION DETECTION
+        // ============================================
+        function checkCollisions() {
+            const dinoRect = {
+                x: 50, // Dino's left position
+                y: state.dinoAltitude, // Dino's bottom position
+                width: CONFIG.DINOSAUR_WIDTH,
+                height: CONFIG.DINOSAUR_HEIGHT
+            };
+            
+            // Check obstacle collisions
+            for (const obstacle of state.obstacles) {
+                const obstacleRect = {
+                    x: obstacle.x,
+                    y: obstacle.y,
+                    width: obstacle.width,
+                    height: obstacle.height
+                };
+                
+                // Simple AABB (Axis-Aligned Bounding Box) collision detection
+                if (dinoRect.x < obstacleRect.x + obstacleRect.width &&
+                    dinoRect.x + dinoRect.width > obstacleRect.x &&
+                    dinoRect.y < obstacleRect.y + obstacleRect.height &&
+                    dinoRect.y + dinoRect.height > obstacleRect.y) {
+                    
+                    handleCollision();
+                    return;
+                }
+            }
+        }
+
+        function handleCollision() {
+            console.log("Collision detected!");
+            
+            // Visual feedback
+            const collisionEffect = document.querySelector('.collision-effect');
+            if (collisionEffect) {
+                collisionEffect.style.display = 'block';
+                void collisionEffect.offsetWidth; // Trigger reflow
+                collisionEffect.style.animation = 'none';
+                
+                setTimeout(() => {
+                    collisionEffect.style.animation = 'flashRed 0.5s';
+                }, 10);
+                
+                setTimeout(() => {
+                    collisionEffect.style.display = 'none';
+                }, 500);
+            }
+            
+            // End game
+            setTimeout(() => {
+                gameOver();
+            }, 100);
+        }
+
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateUI() {
+            elements.scoreElement.textContent = Math.floor(state.score);
+            elements.highScoreElement.textContent = state.highScore;
+            elements.speedElement.textContent = state.speed.toFixed(1) + 'x';
+        }
+
+        function updateObstacleCount() {
+            if (elements.obstaclesCountElement) {
+                elements.obstaclesCountElement.textContent = state.obstacles.length;
+            }
+        }
+
+        // ============================================
+        // VISUAL EFFECTS
+        // ============================================
+        function showStartScreen() {
+            console.log("Showing start screen");
+            elements.gameOverScreen.style.display = 'block';
+            const title = document.getElementById('game-title');
+            const message = document.getElementById('game-message');
+            
+            if (title) title.textContent = 'Flying Dino Game';
+            if (message) message.textContent = 'Press SPACE or click Start to play';
+            
+            if (elements.restartBtn) {
+                elements.restartBtn.textContent = 'Start Game';
+            }
+        }
+
+        function showGameOver() {
+            console.log("Showing game over screen");
+            elements.gameOverScreen.style.display = 'block';
+            const title = document.getElementById('game-title');
+            
+            if (title) title.textContent = 'Game Over';
+            
+            if (elements.finalScoreElement) {
+                elements.finalScoreElement.textContent = Math.floor(state.score);
+            }
+            
+            if (elements.finalHighScoreElement) {
+                elements.finalHighScoreElement.textContent = state.highScore;
+            }
+            
+            if (elements.restartBtn) {
+                elements.restartBtn.textContent = 'Play Again';
+            }
+        }
+
+        // ============================================
+        // CREATE UI ELEMENTS
+        // ============================================
+        function createUIElements() {
+            // Create collision effect animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes flashRed {
+                    0%, 100% { opacity: 0; transform: scale(1); }
+                    50% { opacity: 1; transform: scale(1.02); }
+                }
+                @keyframes scorePop {
+                    0% { transform: scale(1); color: #008080; }
+                    50% { transform: scale(1.3); color: #00CED1; }
+                    100% { transform: scale(1); color: #008080; }
+                }
+                .score-increase {
+                    animation: scorePop 0.5s ease;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Create altitude indicator
+            if (!document.getElementById('altitude-indicator')) {
+                const altitudeIndicator = document.createElement('div');
+                altitudeIndicator.className = 'altitude-indicator';
+                altitudeIndicator.id = 'altitude-indicator';
+                altitudeIndicator.style.cssText = `
+                    position: absolute;
+                    right: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 20px;
+                    height: 200px;
+                    background: rgba(0, 0, 0, 0.1);
+                    border-radius: 10px;
+                    overflow: hidden;
+                `;
+                
+                const altitudeBar = document.createElement('div');
+                altitudeBar.className = 'altitude-bar';
+                altitudeBar.id = 'altitude-bar';
+                altitudeBar.style.cssText = `
+                    position: absolute;
+                    bottom: 0;
+                    width: 100%;
+                    height: 50%;
+                    background: linear-gradient(to top, #34a853, #1a73e8);
+                    border-radius: 8px;
+                    transition: height 0.1s;
+                `;
+                
+                altitudeIndicator.appendChild(altitudeBar);
+                elements.gameArea.appendChild(altitudeIndicator);
+            }
+            
+            if (!document.getElementById('altitude-text')) {
+                const altitudeText = document.createElement('div');
+                altitudeText.className = 'altitude-text';
+                altitudeText.id = 'altitude-text';
+                altitudeText.textContent = 'Altitude: 100px';
+                altitudeText.style.cssText = `
+                    position: absolute;
+                    right: 30px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    font-weight: bold;
+                `;
+                elements.gameArea.appendChild(altitudeText);
+            }
+        }
+
+        // ============================================
+        // INITIALIZE GAME
+        // ============================================
+        // Create UI elements
+        createUIElements();
+        
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', function() {
+            initGame();
+        });
+
+        // ============================================
+        // WINDOW EVENT LISTENERS
+        // ============================================
+        window.addEventListener('blur', () => {
+            if (state.current === GAME_STATES.PLAYING) {
+                togglePause();
+            }
+        });
+
+        // Initialize the game when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initGame);
+        } else {
+            initGame();
+        }
+    </script>
 </body>
 </html>

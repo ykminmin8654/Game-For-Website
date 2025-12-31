@@ -240,6 +240,7 @@ h1 {
     animation: groundMove linear infinite;
     animation-duration: 2s;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1;
 }
 
 @keyframes groundMove {
@@ -257,7 +258,7 @@ h1 {
     background: linear-gradient(135deg, var(--teal) 0%, var(--cyan) 100%);
     border-radius: 8px 5px 5px 8px;
     transition: bottom 0.1s;
-    z-index: 2;
+    z-index: 3;
     transform-origin: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border: 2px solid var(--white);
@@ -382,13 +383,10 @@ h1 {
 /* Obstacles */
 .obstacle {
     position: absolute;
-    bottom: 20px;
-    right: -50px;
-    width: 30px;
+    width: 20px;
     height: 50px;
-    background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%);
     border-radius: var(--border-radius);
-    z-index: 1;
+    z-index: 2;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
     border: 2px solid var(--white);
     transition: transform 0.3s ease;
@@ -399,20 +397,27 @@ h1 {
 }
 
 /* Different colored obstacles for different heights */
-.obstacle[style*="bottom: 20px"] { /* Ground obstacles */
+.obstacle[style*="bottom: 0"] { /* Ground obstacles - CHANGED: bottom: 0 to touch floor */
     background: linear-gradient(135deg, var(--teal) 0%, var(--dark-green) 100%);
+    height: 50px;
 }
 
-.obstacle[style*="bottom: 60px"] { /* Low obstacles */
+.obstacle[style*="bottom: 60"] { /* Low obstacles */
     background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+    height: 40px;
+    width: 25px;
 }
 
-.obstacle[style*="bottom: 100px"] { /* Mid obstacles */
+.obstacle[style*="bottom: 100"] { /* Mid obstacles */
     background: linear-gradient(135deg, #FFD93D 0%, #FF9A3D 100%);
+    height: 50px;
+    width: 30px;
 }
 
-.obstacle[style*="bottom: 140px"] { /* High obstacles */
+.obstacle[style*="bottom: 140"] { /* High obstacles */
     background: linear-gradient(135deg, #6BCF7F 0%, #4CD97B 100%);
+    height: 60px;
+    width: 25px;
 }
 
 /* Clouds */
@@ -423,6 +428,7 @@ h1 {
     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.5);
     opacity: 0.9;
     border: 1px solid rgba(255, 255, 255, 0.5);
+    z-index: 1;
 }
 
 .cloud::before,
@@ -458,7 +464,7 @@ h1 {
     padding: var(--space-xl);
     border-radius: var(--border-radius-lg);
     text-align: center;
-    display: none;
+    display: none; /* FIXED: Initially hidden, JS controls visibility */
     z-index: 20;
     width: 90%;
     max-width: 450px;
@@ -811,7 +817,7 @@ h1 {
     font-size: var(--font-size-md);
     font-weight: 700;
     letter-spacing: 2px;
-    display: none;
+    display: none; /* Hidden by default */
     z-index: 10;
     backdrop-filter: blur(5px);
     border: 2px solid rgba(255, 255, 255, 0.2);
@@ -845,6 +851,7 @@ h1 {
     display: block;
     backdrop-filter: blur(5px);
     box-shadow: var(--shadow);
+    z-index: 2;
 }
 
 .altitude-bar {
@@ -875,6 +882,7 @@ h1 {
     box-shadow: var(--shadow);
     min-width: 100px;
     text-align: center;
+    z-index: 2;
 }
 
 /* Collision Effect */
@@ -886,7 +894,7 @@ h1 {
     z-index: 5;
     pointer-events: none;
     animation: flashRed 0.5s;
-    display: none;
+    display: none; /* Hidden by default */
     backdrop-filter: blur(2px);
 }
 
@@ -922,6 +930,16 @@ h1 {
     animation: scorePop 0.5s ease;
 }
 
+/* Cloud animation */
+.cloud {
+    animation: cloudFloat 20s infinite linear;
+}
+
+@keyframes cloudFloat {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100px); }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .game-container {
@@ -939,8 +957,22 @@ h1 {
     
     .dino {
         width: 50px;
-        height: 60px;
+        height: 40px;
         left: 40px;
+    }
+    
+    .dino::before {
+        left: 30px;
+    }
+    
+    .dino-wing.left {
+        width: 25px;
+        left: -20px;
+    }
+    
+    .dino-wing.right {
+        width: 25px;
+        right: -20px;
     }
     
     .mobile-controls {
@@ -1029,19 +1061,4 @@ h1 {
         width: 70px;
         height: 70px;
     }
-}
-/* Force the game over screen to be visible and on top */
-#game-over {
-    display: block !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    z-index: 1000 !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Make sure the start button is visible */
-#restart-btn {
-    display: block !important;
-    opacity: 1 !important;
-    visibility: visible !important;
 }
