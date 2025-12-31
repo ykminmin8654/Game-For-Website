@@ -1,4 +1,6 @@
 // FLYING DINOSAUR GAME - Complete JavaScript
+// IMPORTANT: Obstacles on the bottom must touch the floor
+
 document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     // GAME VARIABLES AND CONSTANTS
@@ -21,7 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
         OBSTACLE_INTERVAL: 1500,
         CLOUD_INTERVAL: 3000,
         SCORE_INCREMENT: 1,
-        GROUND_HEIGHT: 25
+        GROUND_HEIGHT: 25,
+        DINOSAUR_WIDTH: 60,
+        DINOSAUR_HEIGHT: 40
     };
 
     // Game state
@@ -407,7 +411,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (type === 'ground') {
             width = 20;
             height = 50;
-            bottomPos = 20; // Ground
+            // GROUND OBSTACLES TOUCH THE FLOOR
+            bottomPos = CONFIG.GROUND_HEIGHT; // This makes it touch the floor
         } else if (type === 'low') {
             width = 25;
             height = 40;
@@ -426,6 +431,10 @@ document.addEventListener('DOMContentLoaded', function() {
         obstacle.style.height = `${height}px`;
         obstacle.style.bottom = `${bottomPos}px`;
         
+        // Set data attributes for collision detection
+        obstacle.dataset.type = type;
+        obstacle.dataset.bottom = bottomPos;
+        
         elements.gameArea.appendChild(obstacle);
         
         state.obstacles.push({
@@ -433,7 +442,8 @@ document.addEventListener('DOMContentLoaded', function() {
             x: elements.gameArea.offsetWidth,
             y: bottomPos,
             width: width,
-            height: height
+            height: height,
+            type: type
         });
         
         updateObstacleCount();
@@ -452,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cloud.style.left = `${elements.gameArea.offsetWidth}px`;
         
         elements.gameArea.appendChild(cloud);
-        clouds.push({
+        state.clouds.push({
             element: cloud,
             x: elements.gameArea.offsetWidth,
             width: size,
@@ -542,10 +552,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     function checkCollisions() {
         const dinoRect = {
-            x: 50,
-            y: state.dinoAltitude,
-            width: 60,
-            height: 40
+            x: 50, // Dino's left position
+            y: state.dinoAltitude, // Dino's bottom position
+            width: CONFIG.DINOSAUR_WIDTH,
+            height: CONFIG.DINOSAUR_HEIGHT
         };
         
         // Check obstacle collisions
@@ -557,18 +567,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 height: obstacle.height
             };
             
-            if (checkRectCollision(dinoRect, obstacleRect)) {
-                handleCollision();
-                return;
+            // Check if obstacle is within collision range
+            if (obstacle.x < 150 && obstacle.x + obstacle.width > 50) {
+                // Calculate if dino overlaps with obstacle
+                const dinoBottom = state.dinoAltitude;
+                const dinoTop = dinoBottom + CONFIG.DINOSAUR_HEIGHT;
+                const obstacleBottom = obstacle.y;
+                const obstacleTop = obstacle.y + obstacle.height;
+                
+                // Check for vertical overlap
+                if ((dinoTop > obstacleBottom && dinoBottom < obstacleTop)) {
+                    // Check for horizontal overlap
+                    if (obstacle.x < 100) {
+                        handleCollision();
+                        return;
+                    }
+                }
             }
         }
-    }
-
-    function checkRectCollision(rect1, rect2) {
-        return rect1.x < rect2.x + rect2.width &&
-               rect1.x + rect1.width > rect2.x &&
-               rect1.y < rect2.y + rect2.height &&
-               rect1.y + rect1.height > rect2.y;
     }
 
     function handleCollision() {
@@ -637,13 +653,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (elements.restartBtn) {
             elements.restartBtn.textContent = 'Play Again';
         }
-    }
-
-    // ============================================
-    // UTILITY FUNCTIONS
-    // ============================================
-    function getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     // ============================================
