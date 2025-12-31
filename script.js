@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showStartScreen();
         
         // Start animation loop
-        requestAnimationFrame(gameLoop);
+        state.gameLoopId = requestAnimationFrame(gameLoop);
         
         console.log("🎯 Game ready! Current state:", state.current);
     }
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Button controls
         elements.restartBtn.addEventListener('click', function() {
-            console.log("🔄 Start/Restart button clicked");
+            console.log("🔄 Restart button clicked!");
             handleRestart();
         });
         
@@ -196,9 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
             case 'KeyR':
                 e.preventDefault();
-                if (state.current === GAME_STATES.GAME_OVER) {
-                    handleRestart();
-                }
+                handleRestart();
                 break;
                 
             case 'Enter':
@@ -329,6 +327,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove flying animation
         elements.dino.classList.remove('flying', 'tilt-up', 'tilt-down');
         
+        // Stop game loop
+        if (state.gameLoopId) {
+            cancelAnimationFrame(state.gameLoopId);
+            state.gameLoopId = null;
+        }
+        
         // Update high score
         if (state.score > state.highScore) {
             state.highScore = state.score;
@@ -342,6 +346,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function resetGame() {
         console.log("🔄 Resetting game...");
+        
+        // Stop any existing game loop
+        if (state.gameLoopId) {
+            cancelAnimationFrame(state.gameLoopId);
+            state.gameLoopId = null;
+        }
         
         // Clear all obstacles and clouds
         state.obstacles.forEach(obstacle => {
@@ -365,6 +375,8 @@ document.addEventListener('DOMContentLoaded', function() {
         state.altitudeChange = 0;
         state.level = 1;
         state.groundPosition = 0;
+        state.lastObstacleTime = 0;
+        state.lastCloudTime = 0;
         
         // Reset dino position
         elements.dino.classList.remove('tilt-up', 'tilt-down');
@@ -377,13 +389,27 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create initial clouds
         createInitialClouds();
+        
+        console.log("✅ Game reset complete");
     }
 
     function handleRestart() {
-        console.log("🔄 Restarting game...");
+        console.log("🔄 Restart requested. Current state:", state.current);
+        
+        // Always allow restart from any state
+        resetGame();
+        
         if (state.current === GAME_STATES.GAME_OVER || state.current === GAME_STATES.MENU) {
-            resetGame();
             startGame();
+        } else {
+            // If we're in PLAYING or PAUSED state, just start
+            state.current = GAME_STATES.MENU;
+            showStartScreen();
+            
+            // Restart the game loop for menu animations
+            if (!state.gameLoopId) {
+                state.gameLoopId = requestAnimationFrame(gameLoop);
+            }
         }
     }
 
@@ -392,6 +418,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     function gameLoop(timestamp) {
         if (state.current === GAME_STATES.PLAYING) {
+            // Initialize timestamps if not set
+            if (!state.lastObstacleTime) state.lastObstacleTime = timestamp;
+            if (!state.lastCloudTime) state.lastCloudTime = timestamp;
+            
             // Update game state
             updateGame(timestamp);
             
@@ -400,8 +430,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Schedule next frame
             state.gameLoopId = requestAnimationFrame(gameLoop);
-        } else if (state.current === GAME_STATES.MENU) {
-            // Still run animation for menu clouds
+        } else if (state.current === GAME_STATES.MENU || state.current === GAME_STATES.GAME_OVER || state.current === GAME_STATES.PAUSED) {
+            // Animate clouds and ground in menu/game over/paused states
             updateGround();
             updateClouds();
             state.gameLoopId = requestAnimationFrame(gameLoop);
@@ -425,6 +455,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Increase speed gradually
         if (state.speed < CONFIG.MAX_SPEED) {
             state.speed += CONFIG.SPEED_INCREMENT;
+        }
+        
+        // Update level based on score
+        const newLevel = Math.floor(state.score / 1000) + 1;
+        if (newLevel > state.level) {
+            state.level = newLevel;
         }
         
         // Spawn obstacles
@@ -480,10 +516,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // All obstacles touch the ground
         obstacle.style.width = `${width}px`;
         obstacle.style.height = `${height}px`;
-        obstacle.style.bottom = '0px'; // CHANGED: All obstacles now touch the floor
+        obstacle.style.bottom = '0px';
         obstacle.style.left = `${elements.gameArea.offsetWidth}px`;
         
-        // Add CSS class for obstacle type
+        // Set obstacle color based on type
         switch(type) {
             case 'ground':
                 obstacle.style.background = 'linear-gradient(135deg, var(--teal) 0%, var(--dark-green) 100%)';
@@ -726,35 +762,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================
-    // CREATE MISSING UI ELEMENTS
-    // ============================================
-    function createMissingUIElements() {
-        // Create altitude indicator if it doesn't exist
-        if (!document.getElementById('altitude-indicator') && elements.gameArea) {
-            const altitudeIndicator = document.createElement('div');
-            altitudeIndicator.className = 'altitude-indicator';
-            altitudeIndicator.id = 'altitude-indicator';
-            altitudeIndicator.innerHTML = '<div class="altitude-bar" id="altitude-bar"></div>';
-            elements.gameArea.appendChild(altitudeIndicator);
-            
-            const altitudeText = document.createElement('div');
-            altitudeText.className = 'altitude-text';
-            altitudeText.id = 'altitude-text';
-            altitudeText.textContent = 'Altitude: 100px';
-            elements.gameArea.appendChild(altitudeText);
-            
-            // Update references
-            elements.altitudeBar = document.getElementById('altitude-bar');
-            elements.altitudeText = document.getElementById('altitude-text');
-        }
-    }
-
-    // ============================================
     // INITIALIZE THE GAME
     // ============================================
-    // Create missing UI elements
-    createMissingUIElements();
-    
     // Initialize the game
     initGame();
     
