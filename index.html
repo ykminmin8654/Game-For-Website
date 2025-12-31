@@ -24,38 +24,51 @@
         <div class="game-area" id="game-area">
             <div class="ground"></div>
             
+            <!-- Altitude indicator -->
             <div class="altitude-indicator" id="altitude-indicator">
                 <div class="altitude-bar" id="altitude-bar"></div>
             </div>
             <div class="altitude-text" id="altitude-text">Altitude: 100px</div>
             
+            <!-- Collision effect -->
+            <div class="collision-effect"></div>
+            
+            <!-- Flying dinosaur -->
             <div class="dino" id="dino">
                 <div class="dino-wing left"></div>
                 <div class="dino-wing right"></div>
                 <div class="dino-eye"></div>
             </div>
             
+            <!-- Paused indicator -->
             <div class="paused" id="paused-text">PAUSED</div>
             
+            <!-- Start/Game Over Screen -->
             <div class="game-over" id="game-over">
-                <h2>Game Over</h2>
-                <p>Your score: <span id="final-score">0</span></p>
-                <p>High score: <span id="final-high-score">0</span></p>
-                <button class="restart-btn" id="restart-btn">Play Again</button>
+                <h2 id="game-title">Flying Dino Game</h2>
+                <p id="game-message">Press SPACE or click Start to play</p>
+                <div class="score-display">
+                    <div>Your score: <span id="final-score">0</span></div>
+                    <div>High score: <span id="final-high-score">0</span></div>
+                </div>
+                <button class="restart-btn" id="restart-btn">Start Game</button>
             </div>
         </div>
         
+        <!-- Mobile controls -->
         <div class="mobile-controls">
             <button class="mobile-btn" id="jump-btn">Fly Up</button>
             <button class="mobile-btn" id="duck-btn">Fly Down</button>
         </div>
         
+        <!-- Game stats -->
         <div class="game-stats">
             <div>Speed: <span id="speed">1.0x</span></div>
             <div>Altitude: <span id="altitude-display">100px</span></div>
             <div>Obstacles: <span id="obstacles-count">0</span></div>
         </div>
         
+        <!-- Instructions -->
         <div class="instructions">
             <h3>How to Play</h3>
             <p>Control the flying dinosaur's altitude to avoid obstacles. The game speeds up as your score increases.</p>
@@ -63,8 +76,12 @@
                 <div><span class="key">↑</span> or <span class="key">W</span> or <span class="key">SPACE</span> - Fly Up</div>
                 <div><span class="key">↓</span> or <span class="key">S</span> - Fly Down</div>
                 <div><span class="key">P</span> - Pause/Resume</div>
+                <div><span class="key">R</span> - Restart (when game over)</div>
             </div>
-            <p style="margin-top: 15px; font-style: italic;">Fly through gaps in obstacles at different heights. Release keys to glide.</p>
+            <p style="margin-top: 15px; font-style: italic; color: #666;">
+                Fly through gaps in obstacles at different heights. Release keys to glide. 
+                Ground obstacles touch the floor, so you must fly over them!
+            </p>
         </div>
     </div>
 
