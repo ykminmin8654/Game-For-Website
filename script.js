@@ -629,7 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = elements.gameOverScreen.querySelectorAll('p')[0];
         
         if (title) title.textContent = 'Flying Dino Game';
-        if (message) message.textContent = 'Press SPACE or tap to start';
+        if (message) message.textContent = 'Press SPACE or click Start to play';
         
         if (elements.restartBtn) {
             elements.restartBtn.textContent = 'Start Game';
@@ -729,3 +729,15 @@ function pauseDinoGame() {
         window.dinoGame.pause();
     }
 }
+
+// ============================================
+    // INITIALIZE GAME
+    // ============================================
+    // Create UI elements
+    createUIElements();
+    
+    // Initialize the game
+    initGame();
+    
+    // Show start screen immediately
+    showStartScreen();
