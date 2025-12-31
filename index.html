@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flying Dinosaur Game</title>
     <style>
-        /* TEMPORARY CSS - Will be replaced with external file */
+        /* ====== MAIN STYLES ====== */
         * {
             margin: 0;
             padding: 0;
@@ -41,6 +41,7 @@
             border-left: 4px solid #008080;
         }
 
+        /* ====== GAME HEADER ====== */
         .game-header {
             display: flex;
             justify-content: space-between;
@@ -76,6 +77,7 @@
             color: #008080;
         }
 
+        /* ====== GAME AREA ====== */
         .game-area {
             position: relative;
             width: 100%;
@@ -107,6 +109,7 @@
             100% { transform: translateX(-20px); }
         }
 
+        /* ====== DINOSAUR ====== */
         .dino {
             position: absolute;
             bottom: 100px;
@@ -115,8 +118,8 @@
             height: 40px;
             background: linear-gradient(135deg, #008080 0%, #00CED1 100%);
             border-radius: 8px 5px 5px 8px;
-            transition: bottom 0.1s;
-            z-index: 2;
+            transition: transform 0.2s, bottom 0.1s;
+            z-index: 3;
         }
 
         .dino-wing {
@@ -140,19 +143,71 @@
             right: -25px;
         }
 
+        .dino-eye {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .dino-eye::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 4px;
+            height: 4px;
+            background: #333;
+            border-radius: 50%;
+        }
+
         @keyframes flap {
             0% { transform: scaleY(0.8) rotate(-5deg); }
             100% { transform: scaleY(1.2) rotate(5deg); }
         }
 
+        /* Dino tilt animations */
+        .tilt-up {
+            transform: rotate(-15deg);
+        }
+
+        .tilt-down {
+            transform: rotate(15deg);
+        }
+
+        .flying {
+            animation: floatAnimation 2s infinite ease-in-out;
+        }
+
+        @keyframes floatAnimation {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(0deg); }
+        }
+
+        /* ====== OBSTACLES ====== */
         .obstacle {
             position: absolute;
-            width: 20px;
+            width: 30px;
             height: 50px;
             background: #008080;
             border-radius: 4px;
+            z-index: 2;
         }
 
+        /* ====== CLOUDS ====== */
+        .cloud {
+            position: absolute;
+            background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.5);
+            opacity: 0.9;
+            z-index: 1;
+        }
+
+        /* ====== GAME OVER SCREEN ====== */
         .game-over {
             position: absolute;
             top: 50%;
@@ -162,11 +217,28 @@
             padding: 2rem;
             border-radius: 12px;
             text-align: center;
-            display: none; /* CHANGED: Initially hidden */
             z-index: 20;
             width: 90%;
             max-width: 450px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-over h2 {
+            color: #008080;
+            margin-bottom: 1rem;
+        }
+
+        .score-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #008080;
+            margin: 1rem 0;
+        }
+
+        .score-display span {
+            display: block;
+            font-size: 1.5rem;
+            color: #00CED1;
         }
 
         .restart-btn {
@@ -179,8 +251,14 @@
             cursor: pointer;
             font-weight: bold;
             margin-top: 1rem;
+            transition: transform 0.2s;
         }
 
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* ====== PAUSED INDICATOR ====== */
         .paused {
             position: absolute;
             top: 10px;
@@ -190,10 +268,11 @@
             padding: 0.5rem 1rem;
             border-radius: 8px;
             font-weight: bold;
-            display: none;
             z-index: 10;
+            display: none;
         }
 
+        /* ====== COLLISION EFFECT ====== */
         .collision-effect {
             position: absolute;
             width: 100%;
@@ -204,6 +283,45 @@
             display: none;
         }
 
+        /* ====== ALTITUDE INDICATOR ====== */
+        .altitude-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .altitude-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(to top, #34a853, #1a73e8);
+            border-radius: 8px;
+            transition: height 0.1s;
+        }
+
+        .altitude-text {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: none;
+        }
+
+        /* ====== MOBILE CONTROLS ====== */
         .mobile-controls {
             display: none;
             justify-content: center;
@@ -220,8 +338,14 @@
             border-radius: 50%;
             font-size: 1.2rem;
             cursor: pointer;
+            transition: transform 0.2s;
         }
 
+        .mobile-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* ====== INSTRUCTIONS ====== */
         .instructions {
             margin-top: 1.5rem;
             padding: 1.5rem;
@@ -229,6 +353,30 @@
             border-radius: 8px;
         }
 
+        .instructions h3 {
+            margin-bottom: 1rem;
+            color: #008080;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .key {
+            display: inline-block;
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #008080;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* ====== GAME STATS ====== */
         .game-stats {
             display: flex;
             justify-content: space-between;
@@ -238,9 +386,45 @@
             border-radius: 8px;
         }
 
+        .game-stats div {
+            text-align: center;
+        }
+
+        .game-stats span {
+            display: block;
+            font-weight: bold;
+            color: #008080;
+        }
+
+        /* ====== ANIMATIONS ====== */
+        @keyframes flashRed {
+            0%, 100% { opacity: 0; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+
+        @keyframes scorePop {
+            0% { transform: scale(1); color: #008080; }
+            50% { transform: scale(1.3); color: #00CED1; }
+            100% { transform: scale(1); color: #008080; }
+        }
+
+        .score-increase {
+            animation: scorePop 0.5s ease;
+        }
+
+        /* ====== RESPONSIVE ====== */
         @media (max-width: 768px) {
             .mobile-controls {
                 display: flex;
+            }
+            
+            .game-area {
+                height: 300px;
+            }
+            
+            .altitude-indicator,
+            .altitude-text {
+                display: none !important;
             }
         }
     </style>
@@ -261,16 +445,11 @@
         </div>
         
         <div class="game-area" id="game-area">
+            <!-- Ground -->
             <div class="ground"></div>
             
-            <!-- Altitude indicator -->
-            <div class="altitude-indicator" id="altitude-indicator">
-                <div class="altitude-bar" id="altitude-bar"></div>
-            </div>
-            <div class="altitude-text" id="altitude-text">Altitude: 100px</div>
-            
             <!-- Collision effect -->
-            <div class="collision-effect"></div>
+            <div class="collision-effect" id="collision-effect"></div>
             
             <!-- Flying dinosaur -->
             <div class="dino" id="dino">
@@ -282,8 +461,8 @@
             <!-- Paused indicator -->
             <div class="paused" id="paused-text">PAUSED</div>
             
-            <!-- Start/Game Over Screen -->
-            <div class="game-over" id="game-over">
+            <!-- Game Over Screen -->
+            <div class="game-over" id="game-over-screen">
                 <h2 id="game-title">Flying Dino Game</h2>
                 <p id="game-message">Press SPACE or click Start to play</p>
                 <div class="score-display">
@@ -302,7 +481,7 @@
         
         <!-- Game stats -->
         <div class="game-stats">
-            <div>Speed: <span id="speed">1.0x</span></div>
+            <div>Speed: <span id="speed-display">1.0x</span></div>
             <div>Altitude: <span id="altitude-display">100px</span></div>
             <div>Obstacles: <span id="obstacles-count">0</span></div>
         </div>
@@ -325,801 +504,477 @@
     </div>
 
     <script>
-        // FLYING DINOSAUR GAME - Complete JavaScript
-        // IMPORTANT: Obstacles on the bottom must touch the floor
-
-        // ============================================
-        // GAME VARIABLES AND CONSTANTS
-        // ============================================
-        const GAME_STATES = {
+        // ====== GAME STATE ======
+        const GameState = {
             MENU: 'menu',
             PLAYING: 'playing',
             PAUSED: 'paused',
             GAME_OVER: 'game_over'
         };
 
-        // Game configuration
-        const CONFIG = {
-            INITIAL_SPEED: 5,
-            MAX_SPEED: 20,
-            SPEED_INCREMENT: 0.005,
+        const GameConfig = {
+            INITIAL_SPEED: 3,
+            MAX_SPEED: 8,
+            SPEED_INCREMENT: 0.001,
             FLY_SPEED: 4,
-            MAX_ALTITUDE: 180,
-            MIN_ALTITUDE: 20,
-            OBSTACLE_INTERVAL: 1500,
+            MAX_ALTITUDE: 250,
+            MIN_ALTITUDE: 25,
+            OBSTACLE_INTERVAL: 1800,
             CLOUD_INTERVAL: 3000,
             SCORE_INCREMENT: 1,
-            GROUND_HEIGHT: 25,
-            DINOSAUR_WIDTH: 60,
-            DINOSAUR_HEIGHT: 40
+            DINO_X: 50,
+            DINO_WIDTH: 60,
+            DINO_HEIGHT: 40
         };
 
-        // Game state
-        let state = {
-            current: GAME_STATES.MENU,
+        let game = {
+            state: GameState.MENU,
             score: 0,
             highScore: parseInt(localStorage.getItem('dinoHighScore')) || 0,
-            speed: CONFIG.INITIAL_SPEED,
-            dinoAltitude: 100,
-            altitudeChange: 0,
+            speed: GameConfig.INITIAL_SPEED,
+            dinoY: 100,
+            dinoDirection: 0,
             obstacles: [],
             clouds: [],
-            groundPositions: [0, 800],
+            groundX: 0,
             lastObstacleTime: 0,
             lastCloudTime: 0,
-            gameLoopId: null,
-            level: 1
+            gameLoop: null
         };
 
-        // ============================================
-        // DOM ELEMENTS
-        // ============================================
-        const elements = {
-            gameArea: document.getElementById('game-area'),
-            dino: document.getElementById('dino'),
-            ground: document.querySelector('.ground'),
-            scoreElement: document.getElementById('score'),
-            highScoreElement: document.getElementById('high-score'),
-            finalScoreElement: document.getElementById('final-score'),
-            finalHighScoreElement: document.getElementById('final-high-score'),
-            gameOverScreen: document.getElementById('game-over'),
-            restartBtn: document.getElementById('restart-btn'),
-            speedElement: document.getElementById('speed'),
-            obstaclesCountElement: document.getElementById('obstacles-count'),
-            pausedText: document.getElementById('paused-text'),
-            jumpBtn: document.getElementById('jump-btn'),
-            duckBtn: document.getElementById('duck-btn'),
-            altitudeDisplay: document.getElementById('altitude-display')
-        };
+        // ====== DOM ELEMENTS ======
+        const dino = document.getElementById('dino');
+        const gameArea = document.getElementById('game-area');
+        const ground = document.querySelector('.ground');
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('high-score');
+        const finalScoreElement = document.getElementById('final-score');
+        const finalHighScoreElement = document.getElementById('final-high-score');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const restartBtn = document.getElementById('restart-btn');
+        const speedDisplay = document.getElementById('speed-display');
+        const obstaclesCount = document.getElementById('obstacles-count');
+        const altitudeDisplay = document.getElementById('altitude-display');
+        const pausedText = document.getElementById('paused-text');
+        const collisionEffect = document.getElementById('collision-effect');
+        const jumpBtn = document.getElementById('jump-btn');
+        const duckBtn = document.getElementById('duck-btn');
+        const gameTitle = document.getElementById('game-title');
+        const gameMessage = document.getElementById('game-message');
 
-        // ============================================
-        // GAME INITIALIZATION
-        // ============================================
+        // ====== INITIALIZATION ======
         function initGame() {
             console.log("Game initializing...");
             
-            // Set initial UI state
-            updateUI();
-            updateAltitudeDisplay();
+            updateDisplays();
             createInitialClouds();
-            createGroundPattern();
-            
-            // Setup event listeners
             setupEventListeners();
             
-            // Show start screen
-            showStartScreen();
-            
-            // Start animation loop
-            requestAnimationFrame(gameLoop);
+            // Start the game loop
+            game.gameLoop = requestAnimationFrame(gameUpdate);
         }
 
-        // ============================================
-        // EVENT LISTENERS SETUP
-        // ============================================
+        // ====== EVENT LISTENERS ======
         function setupEventListeners() {
-            // Keyboard controls
+            // Keyboard
             document.addEventListener('keydown', handleKeyDown);
             document.addEventListener('keyup', handleKeyUp);
             
-            // Button controls
-            elements.restartBtn.addEventListener('click', handleRestart);
-            
-            // Mobile controls
-            elements.jumpBtn.addEventListener('touchstart', () => changeAltitude(1));
-            elements.jumpBtn.addEventListener('touchend', () => stopAltitudeChange());
-            elements.jumpBtn.addEventListener('mousedown', () => changeAltitude(1));
-            elements.jumpBtn.addEventListener('mouseup', () => stopAltitudeChange());
-            elements.jumpBtn.addEventListener('mouseleave', () => stopAltitudeChange());
-            
-            elements.duckBtn.addEventListener('touchstart', () => changeAltitude(-1));
-            elements.duckBtn.addEventListener('touchend', () => stopAltitudeChange());
-            elements.duckBtn.addEventListener('mousedown', () => changeAltitude(-1));
-            elements.duckBtn.addEventListener('mouseup', () => stopAltitudeChange());
-            elements.duckBtn.addEventListener('mouseleave', () => stopAltitudeChange());
-            
-            // Touch controls for mobile
-            elements.gameArea.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (state.current === GAME_STATES.MENU) {
+            // Restart button
+            restartBtn.addEventListener('click', function() {
+                if (game.state === GameState.MENU || game.state === GameState.GAME_OVER) {
                     startGame();
                 }
             });
+            
+            // Mobile controls
+            jumpBtn.addEventListener('mousedown', () => changeDinoDirection(1));
+            jumpBtn.addEventListener('mouseup', () => changeDinoDirection(0));
+            jumpBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                changeDinoDirection(1);
+            });
+            jumpBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                changeDinoDirection(0);
+            });
+            
+            duckBtn.addEventListener('mousedown', () => changeDinoDirection(-1));
+            duckBtn.addEventListener('mouseup', () => changeDinoDirection(0));
+            duckBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                changeDinoDirection(-1);
+            });
+            duckBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                changeDinoDirection(0);
+            });
+            
+            // Show mobile controls on touch devices
+            if ('ontouchstart' in window) {
+                document.querySelector('.mobile-controls').style.display = 'flex';
+            }
         }
 
-        // ============================================
-        // INPUT HANDLING
-        // ============================================
         function handleKeyDown(e) {
             switch(e.code) {
                 case 'Space':
                 case 'ArrowUp':
                 case 'KeyW':
                     e.preventDefault();
-                    if (state.current === GAME_STATES.MENU) {
+                    if (game.state === GameState.MENU) {
                         startGame();
-                    } else if (state.current === GAME_STATES.PLAYING) {
-                        changeAltitude(1);
-                    } else if (state.current === GAME_STATES.GAME_OVER) {
-                        handleRestart();
+                    } else if (game.state === GameState.PLAYING) {
+                        changeDinoDirection(1);
+                    } else if (game.state === GameState.GAME_OVER) {
+                        startGame();
                     }
                     break;
                     
                 case 'ArrowDown':
                 case 'KeyS':
                     e.preventDefault();
-                    if (state.current === GAME_STATES.PLAYING) {
-                        changeAltitude(-1);
+                    if (game.state === GameState.PLAYING) {
+                        changeDinoDirection(-1);
                     }
                     break;
                     
                 case 'KeyP':
-                    e.preventDefault();
-                    togglePause();
-                    break;
-                    
-                case 'KeyR':
-                    if (state.current === GAME_STATES.GAME_OVER) {
-                        handleRestart();
-                    }
-                    break;
-                    
                 case 'Escape':
-                    if (state.current === GAME_STATES.PLAYING) {
+                    e.preventDefault();
+                    if (game.state === GameState.PLAYING || game.state === GameState.PAUSED) {
                         togglePause();
                     }
                     break;
             }
-            
-            // Start game on any key if not running
-            if (state.current === GAME_STATES.MENU) {
-                if (e.code !== 'Tab' && e.code !== 'ShiftLeft' && e.code !== 'ShiftRight') {
-                    startGame();
-                }
-            }
         }
 
         function handleKeyUp(e) {
-            if ((e.code === 'ArrowUp' || e.key === ' ' || e.key === 'ArrowDown' || 
-                e.key === 's' || e.key === 'S' || e.key === 'w' || e.key === 'W') && 
-                state.current === GAME_STATES.PLAYING) {
+            if ((e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW' || 
+                 e.code === 'ArrowDown' || e.code === 'KeyS') && 
+                game.state === GameState.PLAYING) {
                 e.preventDefault();
-                stopAltitudeChange();
+                changeDinoDirection(0);
             }
         }
 
-        // ============================================
-        // FLYING MECHANICS
-        // ============================================
-        function updateDinoAltitude() {
-            if (state.current !== GAME_STATES.PLAYING) return;
-            
-            if (state.altitudeChange === 1 && state.dinoAltitude < CONFIG.MAX_ALTITUDE) {
-                state.dinoAltitude += CONFIG.FLY_SPEED;
-                elements.dino.classList.add('tilt-up');
-                elements.dino.classList.remove('tilt-down');
-            } else if (state.altitudeChange === -1 && state.dinoAltitude > CONFIG.MIN_ALTITUDE) {
-                state.dinoAltitude -= CONFIG.FLY_SPEED;
-                elements.dino.classList.add('tilt-down');
-                elements.dino.classList.remove('tilt-up');
-            } else {
-                elements.dino.classList.remove('tilt-up', 'tilt-down');
-                // Gentle downward drift
-                if (state.dinoAltitude > CONFIG.MIN_ALTITUDE + 20) {
-                    state.dinoAltitude -= 0.8;
-                }
-            }
-            
-            // Apply altitude to dino
-            elements.dino.style.bottom = `${state.dinoAltitude}px`;
-            
-            // Update altitude display
-            updateAltitudeDisplay();
-        }
-
-        function changeAltitude(direction) {
-            if (state.current === GAME_STATES.PLAYING) {
-                state.altitudeChange = direction;
+        function changeDinoDirection(dir) {
+            if (game.state === GameState.PLAYING) {
+                game.dinoDirection = dir;
             }
         }
 
-        function stopAltitudeChange() {
-            state.altitudeChange = 0;
-        }
-
-        function updateAltitudeDisplay() {
-            if (elements.altitudeDisplay) {
-                elements.altitudeDisplay.textContent = Math.round(state.dinoAltitude) + 'px';
-            }
-            
-            // Update altitude bar
-            const altitudeBar = document.getElementById('altitude-bar');
-            const altitudeText = document.getElementById('altitude-text');
-            
-            if (altitudeBar && altitudeText) {
-                const percent = ((state.dinoAltitude - CONFIG.MIN_ALTITUDE) / 
-                               (CONFIG.MAX_ALTITUDE - CONFIG.MIN_ALTITUDE)) * 100;
-                
-                altitudeBar.style.height = `${Math.max(0, Math.min(100, percent))}%`;
-                altitudeText.textContent = `Altitude: ${Math.round(state.dinoAltitude)}px`;
-                
-                // Change color based on altitude
-                if (percent > 80) {
-                    altitudeBar.style.background = 'linear-gradient(to top, #ea4335, #fbbc04)';
-                } else if (percent > 50) {
-                    altitudeBar.style.background = 'linear-gradient(to top, #fbbc04, #34a853)';
-                } else {
-                    altitudeBar.style.background = 'linear-gradient(to top, #34a853, #1a73e8)';
-                }
-            }
-        }
-
-        // ============================================
-        // GAME STATE MANAGEMENT
-        // ============================================
+        // ====== GAME FUNCTIONS ======
         function startGame() {
-            if (state.current !== GAME_STATES.MENU) return;
-            
             console.log("Starting game...");
-            resetGame();
-            state.current = GAME_STATES.PLAYING;
+            
+            // Reset game state
+            game.state = GameState.PLAYING;
+            game.score = 0;
+            game.speed = GameConfig.INITIAL_SPEED;
+            game.dinoY = 100;
+            game.dinoDirection = 0;
+            game.obstacles = [];
+            game.clouds = [];
+            game.groundX = 0;
+            
+            // Clear obstacles
+            document.querySelectorAll('.obstacle').forEach(el => el.remove());
             
             // Update UI
-            elements.gameOverScreen.style.display = 'none';
+            dino.classList.remove('tilt-up', 'tilt-down');
+            dino.classList.add('flying');
+            dino.style.bottom = '100px';
+            gameOverScreen.style.display = 'none';
+            pausedText.style.display = 'none';
+            restartBtn.textContent = 'Restart Game';
             
-            // Add flying animation
-            elements.dino.classList.add('flying');
+            updateDisplays();
+            createInitialClouds();
             
-            // Start game loop
-            if (!state.gameLoopId) {
-                state.gameLoopId = requestAnimationFrame(gameLoop);
-            }
+            console.log("Game started!");
         }
 
         function togglePause() {
-            if (state.current === GAME_STATES.PLAYING) {
-                state.current = GAME_STATES.PAUSED;
-                elements.pausedText.style.display = 'block';
-            } else if (state.current === GAME_STATES.PAUSED) {
-                state.current = GAME_STATES.PLAYING;
-                elements.pausedText.style.display = 'none';
-                
-                // Resume game loop
-                if (!state.gameLoopId) {
-                    state.gameLoopId = requestAnimationFrame(gameLoop);
-                }
+            if (game.state === GameState.PLAYING) {
+                game.state = GameState.PAUSED;
+                pausedText.style.display = 'block';
+            } else if (game.state === GameState.PAUSED) {
+                game.state = GameState.PLAYING;
+                pausedText.style.display = 'none';
             }
         }
 
         function gameOver() {
             console.log("Game Over!");
-            state.current = GAME_STATES.GAME_OVER;
+            game.state = GameState.GAME_OVER;
             
             // Remove flying animation
-            elements.dino.classList.remove('flying', 'tilt-up', 'tilt-down');
-            
-            // Cancel animation frame
-            if (state.gameLoopId) {
-                cancelAnimationFrame(state.gameLoopId);
-                state.gameLoopId = null;
-            }
+            dino.classList.remove('flying', 'tilt-up', 'tilt-down');
             
             // Update high score
-            if (state.score > state.highScore) {
-                state.highScore = state.score;
-                localStorage.setItem('dinoHighScore', state.highScore);
+            if (game.score > game.highScore) {
+                game.highScore = game.score;
+                localStorage.setItem('dinoHighScore', game.highScore);
             }
             
             // Show game over screen
             showGameOver();
         }
 
-        function resetGame() {
-            // Clear all obstacles and clouds
-            state.obstacles.forEach(obstacle => {
-                if (obstacle.element && obstacle.element.parentNode) {
-                    obstacle.element.remove();
-                }
-            });
-            
-            state.clouds.forEach(cloud => {
-                if (cloud.element && cloud.element.parentNode) {
-                    cloud.element.remove();
-                }
-            });
-            
-            // Reset state
-            state.obstacles = [];
-            state.clouds = [];
-            state.score = 0;
-            state.speed = CONFIG.INITIAL_SPEED;
-            state.dinoAltitude = 100;
-            state.altitudeChange = 0;
-            state.level = 1;
-            state.lastObstacleTime = 0;
-            state.lastCloudTime = 0;
-            
-            // Reset dino position
-            elements.dino.classList.remove('tilt-up', 'tilt-down');
-            elements.dino.style.bottom = '100px';
-            updateAltitudeDisplay();
-            
-            // Reset UI
-            updateUI();
-        }
-
-        function handleRestart() {
-            console.log("Restarting game...");
-            if (state.current === GAME_STATES.GAME_OVER || state.current === GAME_STATES.MENU) {
-                resetGame();
-                startGame();
-            }
-        }
-
-        // ============================================
-        // GAME LOGIC
-        // ============================================
-        function gameLoop(timestamp) {
-            if (state.current === GAME_STATES.PLAYING) {
-                // Update game state
+        // ====== GAME LOOP ======
+        function gameUpdate(timestamp) {
+            if (game.state === GameState.PLAYING) {
+                if (!game.lastObstacleTime) game.lastObstacleTime = timestamp;
+                if (!game.lastCloudTime) game.lastCloudTime = timestamp;
+                
                 updateGame(timestamp);
-                
-                // Check for collisions
                 checkCollisions();
-                
-                // Schedule next frame
-                state.gameLoopId = requestAnimationFrame(gameLoop);
+            } else if (game.state === GameState.MENU || game.state === GameState.GAME_OVER) {
+                updateGround();
+                updateClouds();
             }
+            
+            game.gameLoop = requestAnimationFrame(gameUpdate);
         }
 
         function updateGame(timestamp) {
-            // Update dino altitude
-            updateDinoAltitude();
+            // Move dino
+            moveDino();
             
             // Update score
-            state.score += CONFIG.SCORE_INCREMENT;
-            if (state.score % 100 === 0) {
-                // Flash score animation
-                elements.scoreElement.classList.add('score-increase');
-                setTimeout(() => {
-                    elements.scoreElement.classList.remove('score-increase');
-                }, 300);
+            game.score += GameConfig.SCORE_INCREMENT;
+            
+            // Speed up
+            if (game.speed < GameConfig.MAX_SPEED) {
+                game.speed += GameConfig.SPEED_INCREMENT;
             }
             
-            // Increase speed gradually
-            if (state.speed < CONFIG.MAX_SPEED) {
-                state.speed += CONFIG.SPEED_INCREMENT;
+            // Create obstacles
+            if (timestamp - game.lastObstacleTime > GameConfig.OBSTACLE_INTERVAL / (game.speed / GameConfig.INITIAL_SPEED)) {
+                createObstacle();
+                game.lastObstacleTime = timestamp;
             }
             
-            // Update level based on score
-            const newLevel = Math.floor(state.score / 1000) + 1;
-            if (newLevel > state.level) {
-                state.level = newLevel;
+            // Create clouds
+            if (timestamp - game.lastCloudTime > GameConfig.CLOUD_INTERVAL) {
+                createCloud();
+                game.lastCloudTime = timestamp;
             }
             
-            // Spawn obstacles
-            if (timestamp - state.lastObstacleTime > CONFIG.OBSTACLE_INTERVAL / (state.speed / CONFIG.INITIAL_SPEED)) {
-                spawnObstacle();
-                state.lastObstacleTime = timestamp;
-            }
-            
-            // Spawn clouds
-            if (timestamp - state.lastCloudTime > CONFIG.CLOUD_INTERVAL) {
-                spawnCloud();
-                state.lastCloudTime = timestamp;
-            }
-            
-            // Update ground movement
+            // Move everything
             updateGround();
+            moveObstacles();
+            moveClouds();
             
-            // Update all moving objects
-            updateObstacles();
-            updateClouds();
-            
-            // Update UI
-            updateUI();
+            // Update displays
+            updateDisplays();
         }
 
-        // ============================================
-        // GAME OBJECT MANAGEMENT
-        // ============================================
-        function spawnObstacle() {
-            const obstacleTypes = ['ground', 'low', 'mid', 'high'];
-            const type = obstacleTypes[Math.floor(Math.random() * 4)];
+        // ====== DINOSAUR MOVEMENT ======
+        function moveDino() {
+            if (game.dinoDirection === 1 && game.dinoY < GameConfig.MAX_ALTITUDE) {
+                game.dinoY += GameConfig.FLY_SPEED;
+                dino.classList.add('tilt-up');
+                dino.classList.remove('tilt-down');
+            } else if (game.dinoDirection === -1 && game.dinoY > GameConfig.MIN_ALTITUDE) {
+                game.dinoY -= GameConfig.FLY_SPEED;
+                dino.classList.add('tilt-down');
+                dino.classList.remove('tilt-up');
+            } else {
+                dino.classList.remove('tilt-up', 'tilt-down');
+                // Gentle downward drift
+                if (game.dinoY > GameConfig.MIN_ALTITUDE + 20) {
+                    game.dinoY -= 0.3;
+                }
+            }
             
+            // Apply position
+            dino.style.bottom = `${game.dinoY}px`;
+            altitudeDisplay.textContent = Math.round(game.dinoY) + 'px';
+        }
+
+        // ====== OBSTACLES ======
+        function createObstacle() {
             const obstacle = document.createElement('div');
             obstacle.className = 'obstacle';
             
-            let width, height, bottomPos;
+            const types = ['ground', 'low', 'mid', 'high'];
+            const type = types[Math.floor(Math.random() * 4)];
             
-            if (type === 'ground') {
-                width = 20;
-                height = 50;
-                // GROUND OBSTACLES TOUCH THE FLOOR
-                bottomPos = 0; // This makes it touch the floor
-            } else if (type === 'low') {
-                width = 25;
-                height = 40;
-                bottomPos = 60; // Low flying
-            } else if (type === 'mid') {
-                width = 30;
-                height = 50;
-                bottomPos = 100; // Mid flying
-            } else { // 'high'
-                width = 25;
-                height = 60;
-                bottomPos = 140; // High flying
+            let height = 50;
+            switch(type) {
+                case 'low': height = 100; break;
+                case 'mid': height = 150; break;
+                case 'high': height = 200; break;
             }
             
-            obstacle.style.width = `${width}px`;
+            obstacle.style.width = '30px';
             obstacle.style.height = `${height}px`;
-            obstacle.style.bottom = `${bottomPos}px`;
-            obstacle.style.left = `${elements.gameArea.offsetWidth}px`;
+            obstacle.style.bottom = '0px';
+            obstacle.style.left = `${gameArea.offsetWidth}px`;
             
-            // Different colors for different heights
-            if (type === 'ground') {
-                obstacle.style.background = 'linear-gradient(135deg, #008080 0%, #006400 100%)';
-            } else if (type === 'low') {
-                obstacle.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)';
-            } else if (type === 'mid') {
-                obstacle.style.background = 'linear-gradient(135deg, #FFD93D 0%, #FF9A3D 100%)';
-            } else { // 'high'
-                obstacle.style.background = 'linear-gradient(135deg, #6BCF7F 0%, #4CD97B 100%)';
-            }
+            // Set color based on height
+            if (height <= 50) obstacle.style.background = '#008080';
+            else if (height <= 100) obstacle.style.background = '#FF6B6B';
+            else if (height <= 150) obstacle.style.background = '#FFD93D';
+            else obstacle.style.background = '#6BCF7F';
             
-            elements.gameArea.appendChild(obstacle);
+            gameArea.appendChild(obstacle);
             
-            state.obstacles.push({
+            game.obstacles.push({
                 element: obstacle,
-                x: elements.gameArea.offsetWidth,
-                y: bottomPos,
-                width: width,
-                height: height,
-                type: type
+                x: gameArea.offsetWidth,
+                width: 30,
+                height: height
             });
             
-            updateObstacleCount();
+            obstaclesCount.textContent = game.obstacles.length;
         }
 
-        function spawnCloud() {
+        function moveObstacles() {
+            for (let i = game.obstacles.length - 1; i >= 0; i--) {
+                const obstacle = game.obstacles[i];
+                obstacle.x -= game.speed;
+                obstacle.element.style.left = `${obstacle.x}px`;
+                
+                if (obstacle.x < -obstacle.width) {
+                    if (obstacle.element.parentNode) {
+                        obstacle.element.remove();
+                    }
+                    game.obstacles.splice(i, 1);
+                }
+            }
+            obstaclesCount.textContent = game.obstacles.length;
+        }
+
+        // ====== CLOUDS ======
+        function createInitialClouds() {
+            for (let i = 0; i < 3; i++) {
+                createCloud(true);
+            }
+        }
+
+        function createCloud(randomX = false) {
             const cloud = document.createElement('div');
             cloud.className = 'cloud';
             
             const size = 40 + Math.random() * 40;
             const y = 20 + Math.random() * 100;
+            const x = randomX ? Math.random() * gameArea.offsetWidth : gameArea.offsetWidth;
             
             cloud.style.width = `${size}px`;
             cloud.style.height = `${size/2}px`;
             cloud.style.top = `${y}px`;
-            cloud.style.left = `${elements.gameArea.offsetWidth}px`;
-            cloud.style.background = 'linear-gradient(135deg, white 0%, #f8f9fa 100%)';
-            cloud.style.borderRadius = '50px';
-            cloud.style.position = 'absolute';
-            cloud.style.boxShadow = '0 4px 15px rgba(255, 255, 255, 0.5)';
-            cloud.style.opacity = '0.9';
+            cloud.style.left = `${x}px`;
             
-            elements.gameArea.appendChild(cloud);
-            state.clouds.push({
+            gameArea.appendChild(cloud);
+            game.clouds.push({
                 element: cloud,
-                x: elements.gameArea.offsetWidth,
+                x: x,
                 width: size,
                 speed: 0.5 + Math.random() * 1
             });
         }
 
-        function createInitialClouds() {
-            for (let i = 0; i < 3; i++) {
-                const cloud = document.createElement('div');
-                cloud.className = 'cloud';
-                
-                const size = 40 + Math.random() * 40;
-                const y = 20 + Math.random() * 100;
-                const x = Math.random() * elements.gameArea.offsetWidth;
-                
-                cloud.style.width = `${size}px`;
-                cloud.style.height = `${size/2}px`;
-                cloud.style.top = `${y}px`;
-                cloud.style.left = `${x}px`;
-                cloud.style.background = 'linear-gradient(135deg, white 0%, #f8f9fa 100%)';
-                cloud.style.borderRadius = '50px';
-                cloud.style.position = 'absolute';
-                cloud.style.boxShadow = '0 4px 15px rgba(255, 255, 255, 0.5)';
-                cloud.style.opacity = '0.9';
-                
-                elements.gameArea.appendChild(cloud);
-                
-                state.clouds.push({
-                    element: cloud,
-                    x: x,
-                    width: size,
-                    speed: 0.5 + Math.random() * 1
-                });
-            }
-        }
-
-        function createGroundPattern() {
-            elements.ground.style.background = `
-                repeating-linear-gradient(
-                    90deg,
-                    #008080,
-                    #008080 20px,
-                    #006400 20px,
-                    #006400 40px
-                )
-            `;
-        }
-
-        // ============================================
-        // UPDATE FUNCTIONS
-        // ============================================
-        function updateObstacles() {
-            for (let i = state.obstacles.length - 1; i >= 0; i--) {
-                const obstacle = state.obstacles[i];
-                obstacle.x -= state.speed;
-                obstacle.element.style.left = `${obstacle.x}px`;
-                
-                if (obstacle.x < -obstacle.width) {
-                    if (obstacle.element && obstacle.element.parentNode) {
-                        obstacle.element.remove();
-                    }
-                    state.obstacles.splice(i, 1);
-                    updateObstacleCount();
-                }
-            }
-        }
-
-        function updateClouds() {
-            for (let i = state.clouds.length - 1; i >= 0; i--) {
-                const cloud = state.clouds[i];
+        function moveClouds() {
+            for (let i = game.clouds.length - 1; i >= 0; i--) {
+                const cloud = game.clouds[i];
                 cloud.x -= cloud.speed;
                 cloud.element.style.left = `${cloud.x}px`;
                 
                 if (cloud.x < -cloud.width) {
-                    if (cloud.element && cloud.element.parentNode) {
+                    if (cloud.element.parentNode) {
                         cloud.element.remove();
                     }
-                    state.clouds.splice(i, 1);
+                    game.clouds.splice(i, 1);
                 }
             }
         }
 
+        // ====== GROUND ======
         function updateGround() {
-            state.groundPositions = state.groundPositions.map(pos => {
-                pos -= state.speed;
-                if (pos <= -800) pos = 800;
-                return pos;
-            });
-            
-            elements.ground.style.backgroundPositionX = `${state.groundPositions[0]}px`;
+            game.groundX -= game.speed;
+            if (game.groundX <= -800) {
+                game.groundX = 0;
+            }
+            ground.style.transform = `translateX(${game.groundX}px)`;
         }
 
-        // ============================================
-        // COLLISION DETECTION
-        // ============================================
+        // ====== COLLISION DETECTION ======
         function checkCollisions() {
             const dinoRect = {
-                x: 50, // Dino's left position
-                y: state.dinoAltitude, // Dino's bottom position
-                width: CONFIG.DINOSAUR_WIDTH,
-                height: CONFIG.DINOSAUR_HEIGHT
+                x: GameConfig.DINO_X,
+                y: game.dinoY,
+                width: GameConfig.DINO_WIDTH,
+                height: GameConfig.DINO_HEIGHT
             };
             
-            // Check obstacle collisions
-            for (const obstacle of state.obstacles) {
+            for (const obstacle of game.obstacles) {
                 const obstacleRect = {
                     x: obstacle.x,
-                    y: obstacle.y,
+                    y: 0,
                     width: obstacle.width,
                     height: obstacle.height
                 };
                 
-                // Simple AABB (Axis-Aligned Bounding Box) collision detection
                 if (dinoRect.x < obstacleRect.x + obstacleRect.width &&
                     dinoRect.x + dinoRect.width > obstacleRect.x &&
-                    dinoRect.y < obstacleRect.y + obstacleRect.height &&
+                    dinoRect.y < obstacleRect.height &&
                     dinoRect.y + dinoRect.height > obstacleRect.y) {
                     
                     handleCollision();
                     return;
                 }
             }
+            
+            // Check ground collision
+            if (game.dinoY <= GameConfig.MIN_ALTITUDE) {
+                handleCollision();
+            }
         }
 
         function handleCollision() {
-            console.log("Collision detected!");
-            
             // Visual feedback
-            const collisionEffect = document.querySelector('.collision-effect');
-            if (collisionEffect) {
-                collisionEffect.style.display = 'block';
-                void collisionEffect.offsetWidth; // Trigger reflow
-                collisionEffect.style.animation = 'none';
-                
-                setTimeout(() => {
-                    collisionEffect.style.animation = 'flashRed 0.5s';
-                }, 10);
-                
-                setTimeout(() => {
-                    collisionEffect.style.display = 'none';
-                }, 500);
-            }
+            collisionEffect.style.display = 'block';
+            collisionEffect.style.animation = 'none';
+            void collisionEffect.offsetWidth;
+            collisionEffect.style.animation = 'flashRed 0.5s';
+            
+            setTimeout(() => {
+                collisionEffect.style.display = 'none';
+            }, 500);
             
             // End game
-            setTimeout(() => {
-                gameOver();
-            }, 100);
+            setTimeout(gameOver, 200);
         }
 
-        // ============================================
-        // UI UPDATES
-        // ============================================
-        function updateUI() {
-            elements.scoreElement.textContent = Math.floor(state.score);
-            elements.highScoreElement.textContent = state.highScore;
-            elements.speedElement.textContent = state.speed.toFixed(1) + 'x';
-        }
-
-        function updateObstacleCount() {
-            if (elements.obstaclesCountElement) {
-                elements.obstaclesCountElement.textContent = state.obstacles.length;
-            }
-        }
-
-        // ============================================
-        // VISUAL EFFECTS
-        // ============================================
-        function showStartScreen() {
-            console.log("Showing start screen");
-            elements.gameOverScreen.style.display = 'block';
-            const title = document.getElementById('game-title');
-            const message = document.getElementById('game-message');
+        // ====== UI UPDATES ======
+        function updateDisplays() {
+            scoreElement.textContent = Math.floor(game.score);
+            highScoreElement.textContent = game.highScore;
+            speedDisplay.textContent = game.speed.toFixed(1) + 'x';
             
-            if (title) title.textContent = 'Flying Dino Game';
-            if (message) message.textContent = 'Press SPACE or click Start to play';
-            
-            if (elements.restartBtn) {
-                elements.restartBtn.textContent = 'Start Game';
+            // Flash score on milestones
+            if (Math.floor(game.score) % 100 === 0 && Math.floor(game.score) > 0) {
+                scoreElement.classList.add('score-increase');
+                setTimeout(() => {
+                    scoreElement.classList.remove('score-increase');
+                }, 300);
             }
         }
 
         function showGameOver() {
-            console.log("Showing game over screen");
-            elements.gameOverScreen.style.display = 'block';
-            const title = document.getElementById('game-title');
-            
-            if (title) title.textContent = 'Game Over';
-            
-            if (elements.finalScoreElement) {
-                elements.finalScoreElement.textContent = Math.floor(state.score);
-            }
-            
-            if (elements.finalHighScoreElement) {
-                elements.finalHighScoreElement.textContent = state.highScore;
-            }
-            
-            if (elements.restartBtn) {
-                elements.restartBtn.textContent = 'Play Again';
-            }
+            gameTitle.textContent = 'Game Over';
+            gameMessage.textContent = 'You crashed! Try again?';
+            finalScoreElement.textContent = Math.floor(game.score);
+            finalHighScoreElement.textContent = game.highScore;
+            gameOverScreen.style.display = 'block';
+            restartBtn.textContent = 'Play Again';
         }
 
-        // ============================================
-        // CREATE UI ELEMENTS
-        // ============================================
-        function createUIElements() {
-            // Create collision effect animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes flashRed {
-                    0%, 100% { opacity: 0; transform: scale(1); }
-                    50% { opacity: 1; transform: scale(1.02); }
-                }
-                @keyframes scorePop {
-                    0% { transform: scale(1); color: #008080; }
-                    50% { transform: scale(1.3); color: #00CED1; }
-                    100% { transform: scale(1); color: #008080; }
-                }
-                .score-increase {
-                    animation: scorePop 0.5s ease;
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Create altitude indicator
-            if (!document.getElementById('altitude-indicator')) {
-                const altitudeIndicator = document.createElement('div');
-                altitudeIndicator.className = 'altitude-indicator';
-                altitudeIndicator.id = 'altitude-indicator';
-                altitudeIndicator.style.cssText = `
-                    position: absolute;
-                    right: 10px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    width: 20px;
-                    height: 200px;
-                    background: rgba(0, 0, 0, 0.1);
-                    border-radius: 10px;
-                    overflow: hidden;
-                `;
-                
-                const altitudeBar = document.createElement('div');
-                altitudeBar.className = 'altitude-bar';
-                altitudeBar.id = 'altitude-bar';
-                altitudeBar.style.cssText = `
-                    position: absolute;
-                    bottom: 0;
-                    width: 100%;
-                    height: 50%;
-                    background: linear-gradient(to top, #34a853, #1a73e8);
-                    border-radius: 8px;
-                    transition: height 0.1s;
-                `;
-                
-                altitudeIndicator.appendChild(altitudeBar);
-                elements.gameArea.appendChild(altitudeIndicator);
-            }
-            
-            if (!document.getElementById('altitude-text')) {
-                const altitudeText = document.createElement('div');
-                altitudeText.className = 'altitude-text';
-                altitudeText.id = 'altitude-text';
-                altitudeText.textContent = 'Altitude: 100px';
-                altitudeText.style.cssText = `
-                    position: absolute;
-                    right: 30px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    background: rgba(0, 0, 0, 0.7);
-                    color: white;
-                    padding: 0.5rem 1rem;
-                    border-radius: 8px;
-                    font-size: 0.9rem;
-                    font-weight: bold;
-                `;
-                elements.gameArea.appendChild(altitudeText);
-            }
-        }
-
-        // ============================================
-        // INITIALIZE GAME
-        // ============================================
-        // Create UI elements
-        createUIElements();
-        
-        // Initialize the game
-        document.addEventListener('DOMContentLoaded', function() {
-            initGame();
-        });
-
-        // ============================================
-        // WINDOW EVENT LISTENERS
-        // ============================================
-        window.addEventListener('blur', () => {
-            if (state.current === GAME_STATES.PLAYING) {
-                togglePause();
-            }
-        });
-
-        // Initialize the game when page loads
+        // ====== INITIALIZE ======
+        // Initialize when page loads
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initGame);
         } else {
