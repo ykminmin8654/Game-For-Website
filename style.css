@@ -1030,3 +1030,18 @@ h1 {
         height: 70px;
     }
 }
+/* Force the game over screen to be visible and on top */
+#game-over {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 1000 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Make sure the start button is visible */
+#restart-btn {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
